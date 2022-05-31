@@ -1,0 +1,67 @@
+<?xml version='1.0' encoding='utf-8'?>
+<graphml xmlns="http://graphml.graphdrawing.org/xmlns" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://graphml.graphdrawing.org/xmlns http://graphml.graphdrawing.org/xmlns/1.0/graphml.xsd">
+  <key attr.name="LinkFwdCap" attr.type="long" for="edge" id="d5" />
+  <key attr.name="NodeType" attr.type="string" for="node" id="d4" />
+  <key attr.name="NodeCap" attr.type="long" for="node" id="d3" />
+  <key attr.name="Longitude" attr.type="double" for="node" id="d2" />
+  <key attr.name="Latitude" attr.type="double" for="node" id="d1" />
+  <key attr.name="id" attr.type="long" for="node" id="d0" />
+  <graph edgedefault="undirected">
+    <node id="0">
+      <data key="d0">0</data>
+      <data key="d1">40.71427</data>
+      <data key="d2">-74.00597</data>
+      <data key="d3">2</data>
+      <data key="d4">Normal</data>
+    </node>
+    <node id="1">
+      <data key="d0">1</data>
+      <data key="d1">41.85003</data>
+      <data key="d2">-87.65005</data>
+      <data key="d3">1</data>
+      <data key="d4">Ingress</data>
+    </node>
+    <node id="2">
+      <data key="d0">2</data>
+      <data key="d1">38.89511</data>
+      <data key="d2">-77.03637</data>
+      <data key="d3">2</data>
+      <data key="d4">Normal</data>
+    </node>
+    <node id="3">
+      <data key="d0">3</data>
+      <data key="d1">33.749</data>
+      <data key="d2">-84.38798</data>
+      <data key="d3">0</data>
+      <data key="d4">Normal</data>
+    </node>
+    <node id="4">
+      <data key="d0">4</data>
+      <data key="d1">39.76838</data>
+      <data key="d2">-86.15804</data>
+      <data key="d3">1</data>
+      <data key="d4">Ingress</data>
+    </node>
+    <edge source="0" target="1">
+      <data key="d5">588</data>
+    </edge>
+    <edge source="0" target="2">
+      <data key="d5">990</data>
+    </edge>
+    <edge source="1" target="4">
+      <data key="d5">794</data>
+    </edge>
+    <edge source="1" target="3">
+      <data key="d5">832</data>
+    </edge>
+    <edge source="2" target="3">
+      <data key="d5">564</data>
+    </edge>
+    <edge source="2" target="4">
+      <data key="d5">949</data>
+    </edge>
+    <edge source="3" target="4">
+      <data key="d5">590</data>
+    </edge>
+  </graph>
+</graphml>

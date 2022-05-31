@@ -10,6 +10,6 @@ algorithm_type: "SA"
 
 # objective and reward
 objective: 'weighted'
-flow_weight: 1
-delay_weight: 0
+flow_weight: 0.5
+delay_weight: 0.5
 

@@ -1,6 +1,13 @@
+--index-url https://pypi.python.org/simple/
+
+--editable git+https://github.com/RealVNF/DeepCoord@tnsm2021#egg=DeepCoord
+
 PyYAML
 numpy
 pandas
 matplotlib
 simanneal
 scipy
+networkx
+tqdm
+seaborn

@@ -3,7 +3,7 @@
 # all parameters are required, defaults are in comments
 
 # Setting episode steps
-steps: 200
+steps: 500
 
 # Algorithm type: SAC or DDPG
 algorithm_type: "SA"

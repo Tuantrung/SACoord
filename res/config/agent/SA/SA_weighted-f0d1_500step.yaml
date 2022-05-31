@@ -3,13 +3,13 @@
 # all parameters are required, defaults are in comments
 
 # Setting episode steps
-steps: 200
+steps: 500
 
-# Algorithm type: SAC or DDPG
+# Algorithm type: SA
 algorithm_type: "SA"
 
 # objective and reward
 objective: 'weighted'
-flow_weight: 1
-delay_weight: 0
+flow_weight: 0
+delay_weight: 1
 
