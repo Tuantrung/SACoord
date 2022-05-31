@@ -4,6 +4,8 @@ import math
 import numpy as np
 import matplotlib.pyplot as plt
 
+# source https://www.youtube.com/watch?v=T28fr9wDZrg
+
 # Customization section:
 initial_temperature = 100
 # cooling coefficient

@@ -13,7 +13,55 @@ class SASimulatorWrapper(SimulatorWrapper):
         super(SASimulatorWrapper, self).__init__(simulator, env_limits)
         self.observations_space = None
 
-    def apply(self, action_array: np.ndarray) -> Tuple[object, SimulatorState]:
+    def init(self, seed) -> SimulatorState:
+        """Creates a new simulation environment.
+
+        Reuses network_file, service_functions_file from object scope.
+        Creates mapping from string identifier to integer IDs for nddes, SFC, and sf
+        Calculates shortest paths array for network graph.
+
+        Parameters
+        ----------
+        seed : int
+            The seed value enables reproducible gym environments respectively
+            reproducible simulator environments. This value should initialize
+            the random number generator used by the simulator when executing
+            randomized functions.
+
+        Returns
+        -------
+        vectorized_state: np.ndarray
+
+        state: SimulatorState
+        """
+        logger.debug("INIT Simulator")
+        # get initial state
+        init_state = self.simulator.init(seed)
+
+        # create a mapping such that every node, SF and SFC has a fixed array position
+        # this is important for the RL
+        # create also an inverted mapping
+        node_index = 0
+        sfc_index = 0
+        sf_index = 0
+
+        for node in init_state.network['nodes']:
+            self.node_map[node['id']] = node_index
+            node_index = node_index + 1
+
+        self.sfc_dict = init_state.sfcs
+
+        for sfc in init_state.sfcs:
+            self.sfc_map[sfc] = sfc_index
+            sfc_index = sfc_index + 1
+
+        for service_function in init_state.service_functions:
+            self.sf_map[service_function] = sf_index
+            sf_index = sf_index + 1
+
+        return init_state
+
+    def apply(self, action_array: np.ndarray) -> SimulatorState:
         """
         Encapsulates the simulators apply method to use the gym interface
 

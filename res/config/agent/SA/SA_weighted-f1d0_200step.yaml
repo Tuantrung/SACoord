@@ -1,0 +1,15 @@
+# module for configuring the RL agent
+# configuration parameters are loaded and used both when using the agent via the CLI and via the interface
+# all parameters are required, defaults are in comments
+
+# Setting episode steps
+steps: 200
+
+# Algorithm type: SAC or DDPG
+algorithm_type: "SA"
+
+# objective and reward
+objective: 'weighted'
+flow_weight: 1
+delay_weight: 0
+

@@ -4,58 +4,78 @@ from rl.random import GaussianWhiteNoiseProcess
 from siminterface.simulator import Simulator
 from coordsim.reader.reader import read_network, get_sfc, get_sf, network_diameter
 from rlsp.envs.action_norm_processor import ActionScheduleProcessor
-from sa_interface import SASimulatorWrapper
-
+from sa_simulator_wrapper import SASimulatorWrapper
+from datetime import datetime
 from rlsp.envs.environment_limits import EnvironmentLimits
-
+from rlsp.agents.main import get_base_path
+from common.common_functionalities import create_input_file
 import numpy as np
 from spinterface import SimulatorState
+from tqdm import tqdm
+import yaml
+import os
+from shutil import copyfile
 
 logger = logging.getLogger(__name__)
 
+seed = 1234
 sigma = 0.2
 mu = 0.0
-network_path = '../params/networks/triangle.graphml'
-service_path = '../params/services/abc.yaml'
-sim_config_path = '../params/config/sim_config.yaml'
+algorithm_config_path = '../res/config/agent/SA/SA_weighted-f05d05.yaml'
+network_path = '../res/networks/5node/5node-in2-rand-cap0-2.graphml'
+service_path = '../res/service_functions/abc.yaml'
+sim_config_path = '../res/config/simulator/det-arrival10_det-size001_duration100.yaml'
+DATETIME = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
 
 
 class CoordProblem(Annealer):
     """
     Implement annealer with Coord Problem.
     """
-    simulator_state : SimulatorState
+    simulator_state: SimulatorState
 
     # pass extra data into the constructor
-    def __init__(self, simulator, state, initial_action, network_file, service_file, flow_weight, delay_weight):
+    def __init__(self, simulator, action, seed, network_file, service_file, flow_weight, delay_weight):
         self.simulator = simulator
-        self.network_file = network_file
-        self.action_processor = ActionScheduleProcessor(num_nodes, num_sfcs, num_sfs)
+        self.action = action
+        self.seed = seed
 
-        self.action = initial_action
-        self.curr_simulator_state = state
-
-        self.network, _, _ = read_network(self.network_file)
+        self.network, _, _ = read_network(network_file)
+        self.num_nodes = len(self.network)
         self.network_diameter = network_diameter(self.network)
+
         self.sfc_list = get_sfc(service_file)
+        self.num_sfcs = len(sfc_list)
+
         self.sf_list = get_sf(service_file)
+        self.num_sfs = len(sf_list)
+
+        self.tmp = self.num_nodes * self.num_sfcs * self.num_sfs
+
+        self.action_processor = ActionScheduleProcessor(self.num_nodes, self.num_sfcs, self.num_sfs)
         self.env_limits = EnvironmentLimits(len(self.network.nodes), self.sfc_list, 1)
+        self.simulator_wrapper = SASimulatorWrapper(self.simulator, self.env_limits)
+        self.simulator_wrapper.init(self.seed)
+        self.curr_simulator_state = self.simulator_wrapper.apply(action)
 
         self.flow_weight = flow_weight
         self.delay_weight = delay_weight
 
-        self.simulator_wrapper = SASimulatorWrapper(self.simulator, self.env_limits)
-
         self.min_delay, self.max_delay = self.min_max_delay()
-        super(CoordProblem, self).__init__(state)
+        super().__init__(initial_state=self.action)
 
     def move(self):
         """Add Gaussian White Noise to action"""
         initial_energy = self.energy()
-        random_process = GaussianWhiteNoiseProcess(sigma=sigma, mu=mu, size=27)
-        action = action_processor.process_action(self.action + random_process.sample())
 
-        self.simulator_state = self.simulator_wrapper.apply(action)
+        random_process = GaussianWhiteNoiseProcess(sigma=sigma, mu=mu, size=self.tmp)
+        noise = random_process.sample()
+
+        for i in range(self.num_nodes):
+            t = i * self.num_nodes
+            self.action[t: t + self.tmp] = self.action[t: t + self.tmp] + noise
+
+        self.curr_simulator_state = self.simulator_wrapper.apply(self.action)
 
         return self.energy() - initial_energy
 
@@ -84,7 +104,7 @@ class CoordProblem(Annealer):
         if cur_succ_flow + cur_drop_flow > 0:
             succ_ratio = cur_succ_flow / (cur_succ_flow + cur_drop_flow)
             # use this for flow reward instead of succ ratio to use full [-1, 1] range rather than just [0,1]
-            flow_reward = (cur_succ_flow - cur_drop_flow) / (cur_succ_flow + cur_drop_flow)
+            flow_reward = (cur_drop_flow - cur_succ_flow) / (cur_succ_flow + cur_drop_flow)
         return succ_ratio, flow_reward
 
     def get_delay_reward(self, simulator_state, succ_ratio):
@@ -99,7 +119,7 @@ class CoordProblem(Annealer):
         else:
             # subtract from min delay = vnf delay;
             # to disregard VNF delay, which cannot be affected and may already be larger than the diameter
-            delay_reward = ((self.min_delay - delay) / self.network_diameter) + 1
+            delay_reward = (delay - self.min_delay) / self.network_diameter
             delay_reward = np.clip(delay_reward, -1, 1)
         return delay, delay_reward
 
@@ -128,12 +148,30 @@ class CoordProblem(Annealer):
         return total_reward
 
 
+def get_config(config_file):
+    """Parse agent config params in specified yaml file and return as Python dict"""
+    with open(config_file) as f:
+        config = yaml.load(f, Loader=yaml.FullLoader)
+    return config
+
+
+def copy_input_files(target_dir, algorithm_config_path, network_path, service_path, sim_config_path):
+    """Create the results directory and copy input files"""
+    new_algorithm_config_path = f"{target_dir}/{os.path.basename(algorithm_config_path)}"
+    new_network_path = f"{target_dir}/{os.path.basename(network_path)}"
+    new_service_path = f"{target_dir}/{os.path.basename(service_path)}"
+    new_sim_config_path = f"{target_dir}/{os.path.basename(sim_config_path)}"
+
+    os.makedirs(target_dir, exist_ok=True)
+    copyfile(algorithm_config_path, new_algorithm_config_path)
+    copyfile(network_path, new_network_path)
+    copyfile(service_path, new_service_path)
+    copyfile(sim_config_path, new_sim_config_path)
+
+
 if __name__ == '__main__':
-
-    sim = Simulator(network_path, service_path, sim_config_path)
-
-    # get the number of nodes
-    network, _, _ = read_network(network_path)
+    # get the number of nodes and list of ingress nodes
+    network, ingress_nodes, _ = read_network(network_path)
     num_nodes = len(network.nodes)
 
     # get the number of sfc
@@ -147,20 +185,49 @@ if __name__ == '__main__':
             max_sf_length = len(sf_list)
     num_sfs = max_sf_length
 
-    # set flow weight, delay_weight
-    flow_weight = 0.5
-    delay_weight = 0.5
+    # get the algorithm config
+    algorithm_config = get_config(algorithm_config_path)
 
+    # set the flow weight and the delay_weight
+    flow_weight = algorithm_config['flow_weight']
+    delay_weight = algorithm_config['delay_weight']
+
+    # get the base path
+    base_path = get_base_path(algorithm_config_path, network_path, service_path, sim_config_path)
+
+    # set the result dir
+    results_dir = f"../results/{base_path}/{DATETIME}_seed{seed}"
+
+    # create the simulator
+    sim = Simulator(network_path, service_path, sim_config_path, test_mode=True, test_dir=results_dir)
+
+    # initial action
     action_processor = ActionScheduleProcessor(num_nodes, num_sfcs, num_sfs)
-    initial_action = action_processor.process_action(np.random.rand(num_nodes * num_sfcs * num_sfs * num_nodes))
+    equal_action = np.zeros(num_nodes * num_sfcs * num_sfs * num_nodes)
 
-    init_state = sim.init(1234)
+    # initial_action = np.array([0, 0.4, 0.6, 0.6, 0.2, 0.2, 0.6, 0.2, 0.2, 0, 0.4, 0.6, 0.6, 0.2, 0.2, 0.6, 0.2, 0.2,
+    #                0, 0.4, 0.6, 0.6, 0.2, 0.2, 0.6, 0.2, 0.2])
+    initial_action = action_processor.process_action(equal_action)
 
-    sacoord = CoordProblem(sim, init_state, initial_action, network_path, service_path , flow_weight, delay_weight)
-
-    sacoord.set_schedule(sacoord.auto(minutes=0.2))
+    sacoord = CoordProblem(sim, initial_action, seed, network_path, service_path, flow_weight, delay_weight)
     sacoord.copy_strategy = "slice"
 
-    state, e = sacoord.anneal()
+    try:
+        sacoord.steps = algorithm_config['steps']
+    except:
+        logging.info("The steps is not setting, continue with the defaults value")
 
-    # print(state)
+    # sacoord.set_schedule(sacoord.auto(minutes=0.05))
+
+    optimistic_action, e = sacoord.anneal()
+    assert len(optimistic_action) == len(initial_action)
+
+    # copy input file to the results directory
+    copy_input_files(results_dir, algorithm_config_path, network_path, service_path, sim_config_path)
+
+    # create information algorithms file
+    create_input_file(results_dir, len(ingress_nodes), "SA")
+
+    # # for i in tqdm(range(500)):
+    # #     sacoord.move()
+    # #     print("Energy: ", sacoord.energy())
