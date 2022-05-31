@@ -96,4 +96,3 @@ if __name__ == '__main__':
     # # print(placement)
     # # print(traffic['pop1']['sfc1'][''])
     # print(traffic)
-

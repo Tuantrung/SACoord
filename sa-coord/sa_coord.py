@@ -188,7 +188,7 @@ if __name__ == '__main__':
     # get the algorithm config
     algorithm_config = get_config(algorithm_config_path)
 
-    # set the flow weight and the delay_weight
+    # get the flow weight and the delay_weight
     flow_weight = algorithm_config['flow_weight']
     delay_weight = algorithm_config['delay_weight']
 

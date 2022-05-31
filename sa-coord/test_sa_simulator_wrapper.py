@@ -69,10 +69,4 @@ for i in tqdm(range(3)):
 copy_input_files(results_dir, os.path.abspath(network_path), os.path.abspath(service_path),
                  os.path.abspath(sim_config_path))
 
-create_input_file(results_dir, len(ingress_nodes), "SAN")
-
-
-
-
-
-
+create_input_file(results_dir, len(ingress_nodes), "SA")
