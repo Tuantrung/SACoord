@@ -43,7 +43,7 @@ def main():
     network_file = '../res/networks/5node/5node-in0-rand-cap0-2.graphml'
     new_network_file = '../res/networks/5node/5node-in1-rand-cap0-2.graphml'
     new_network_file_1 = '../res/networks/5node/5node-in2-rand-cap0-2.graphml'
-    # gen_new_network(network_file, 0, 2)
+    gen_new_network(network_file, 0, 2)
     set_ingress(network_file, new_network_file, '1')
     set_ingress(new_network_file, new_network_file_1, '4')
 

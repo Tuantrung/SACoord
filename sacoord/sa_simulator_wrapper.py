@@ -1,7 +1,6 @@
 import logging
 from rlsp.envs.simulator_wrapper import SimulatorWrapper
 import numpy as np
-from typing import Tuple
 from spinterface import SimulatorAction, SimulatorState
 from rlsp.envs.action_norm_processor import ActionScheduleProcessor
 

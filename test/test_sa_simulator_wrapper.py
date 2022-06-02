@@ -1,4 +1,4 @@
-from sa_simulator_wrapper import SASimulatorWrapper
+from sacoord.sa_simulator_wrapper import SASimulatorWrapper
 from siminterface import Simulator
 from rl.random import GaussianWhiteNoiseProcess
 import numpy as np
@@ -14,12 +14,12 @@ from tqdm import tqdm
 
 
 # initial parameter
-network_path = '../params/networks/triangle.graphml'
+network_path = '../res/networks/5node/5node-in2-rand-cap0-5.graphml'
 service_path = '../params/services/abc.yaml'
 sim_config_path = '../params/config/sim_config.yaml'
 sigma = 0.2
 mu = 0.0
-seed = 3456
+seed = 1456
 
 DATETIME = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
 
@@ -51,22 +51,38 @@ sa_simulator_wrapper = SASimulatorWrapper(simulator, env_limits)
 
 # set up simulator wrapper state
 initial_state = sa_simulator_wrapper.init(seed)
+
 action_processor = ActionScheduleProcessor(env_limits.MAX_NODE_COUNT, env_limits.MAX_SF_CHAIN_COUNT,
                                            env_limits.MAX_SERVICE_FUNCTION_COUNT)
-action_array = np.zeros(len(network.nodes) * num_sfs * num_sfs)
+
+# action_array = np.zeros(len(network.nodes) * len(network.nodes) * num_sfs)
+action_array = np.zeros(shape=75, dtype=float)
 action = action_processor.process_action(action_array)
 
-for i in tqdm(range(3)):
-    # add noise
-    random_process = GaussianWhiteNoiseProcess(sigma=sigma, mu=mu, size=27)
-    noise = random_process.sample()
-    action_array = action_array + noise
+tmp = len(network.nodes) * num_sfs
 
-    action = action_processor.process_action(action_array)
+for j in tqdm(range(10)):
+    # add noise
+    random_process = GaussianWhiteNoiseProcess(sigma=sigma, mu=mu, size=15)
+    noise = random_process.sample()
+
+    for i in range(5):
+        t = i * tmp
+        action[t: t + tmp] = action[t: t + tmp] + noise
+
     state = sa_simulator_wrapper.apply(action)
+    print(j)
+    print(state.placement)
+    print(state.traffic['pop0']['sfc_1'])
+    print(state.traffic['pop1']['sfc_1'])
+    print(state.traffic['pop2']['sfc_1'])
+    print(state.traffic['pop3']['sfc_1'])
+    print(state.traffic['pop4']['sfc_1'])
+    print("\n")
+
 
 # copy the input files(network, simulator config....) to  the results directory
-copy_input_files(results_dir, os.path.abspath(network_path), os.path.abspath(service_path),
-                 os.path.abspath(sim_config_path))
+# copy_input_files(results_dir, os.path.abspath(network_path), os.path.abspath(service_path),
+#                  os.path.abspath(sim_config_path))
 
-create_input_file(results_dir, len(ingress_nodes), "SA")
+# create_input_file(results_dir, len(ingress_nodes), "SA")

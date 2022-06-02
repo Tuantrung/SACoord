@@ -18,50 +18,50 @@
       <data key="d0">1</data>
       <data key="d1">41.85003</data>
       <data key="d2">-87.65005</data>
-      <data key="d3">1</data>
+      <data key="d3">2</data>
       <data key="d4">Ingress</data>
     </node>
     <node id="2">
       <data key="d0">2</data>
       <data key="d1">38.89511</data>
       <data key="d2">-77.03637</data>
-      <data key="d3">2</data>
+      <data key="d3">1</data>
       <data key="d4">Normal</data>
     </node>
     <node id="3">
       <data key="d0">3</data>
       <data key="d1">33.749</data>
       <data key="d2">-84.38798</data>
-      <data key="d3">0</data>
+      <data key="d3">2</data>
       <data key="d4">Normal</data>
     </node>
     <node id="4">
       <data key="d0">4</data>
       <data key="d1">39.76838</data>
       <data key="d2">-86.15804</data>
-      <data key="d3">1</data>
+      <data key="d3">0</data>
       <data key="d4">Normal</data>
     </node>
     <edge source="0" target="1">
-      <data key="d5">588</data>
+      <data key="d5">832</data>
     </edge>
     <edge source="0" target="2">
-      <data key="d5">990</data>
+      <data key="d5">635</data>
     </edge>
     <edge source="1" target="4">
-      <data key="d5">794</data>
+      <data key="d5">599</data>
     </edge>
     <edge source="1" target="3">
       <data key="d5">832</data>
     </edge>
     <edge source="2" target="3">
-      <data key="d5">564</data>
+      <data key="d5">935</data>
     </edge>
     <edge source="2" target="4">
-      <data key="d5">949</data>
+      <data key="d5">541</data>
     </edge>
     <edge source="3" target="4">
-      <data key="d5">590</data>
+      <data key="d5">606</data>
     </edge>
   </graph>
 </graphml>
