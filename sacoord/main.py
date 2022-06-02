@@ -7,7 +7,7 @@ from rlsp.agents.main import get_base_path
 from common.common_functionalities import create_input_file
 import numpy as np
 import click
-from sacoord import CoordProblem, get_config, copy_input_files
+from sacoord.sa_coord import CoordProblem, get_config, copy_input_files
 import random
 
 sigma = 0.2
@@ -75,17 +75,17 @@ def cli(algorithm_config, network, service, sim_config, seed):
     equal_action = np.zeros(num_nodes * num_sfcs * num_sfs * num_nodes)
     initial_action = action_processor.process_action(equal_action)
 
-    sacoord = CoordProblem(sim, initial_action, seed, network_path, service_path, flow_weight, delay_weight)
-    sacoord.copy_strategy = "slice"
+    sacoord_instance = CoordProblem(sim, initial_action, seed, network_path, service_path, flow_weight, delay_weight)
+    sacoord_instance.copy_strategy = "slice"
 
     try:
-        sacoord.steps = algorithm_config['steps']
+        sacoord_instance.steps = algorithm_config['steps']
     except:
         logging.info("The steps is not setting, continue with the defaults value")
 
     # sacoord.set_schedule(sacoord.auto(minutes=0.05))
 
-    optimistic_action, e = sacoord.anneal()
+    optimistic_action, e = sacoord_instance.anneal()
     assert len(optimistic_action) == len(initial_action)
 
     # copy input file to the results directory
@@ -100,5 +100,5 @@ if __name__ == '__main__':
     _defaults_network = '../res/networks/5node/5node-in2-rand-cap0-2.graphml'
     _defaults_service = '../res/service_functions/abc.yaml'
     _defaults_sim_config = '../res/config/simulator/det-arrival10_det-size001_duration100.yaml'
-    _defaults_seed = 1234
-    cli([_defaults_algorithm_config, _defaults_network, _defaults_service, _defaults_sim_config, _defaults_seed])
+    _defaults_seed = '1234'
+    cli([_defaults_algorithm_config, _defaults_network, _defaults_service, _defaults_sim_config, '--seed', _defaults_seed])
