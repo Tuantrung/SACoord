@@ -1,14 +1,14 @@
-import logging
 from siminterface.simulator import Simulator
 from coordsim.reader.reader import read_network, get_sfc
 from rlsp.envs.action_norm_processor import ActionScheduleProcessor
 from datetime import datetime
 from rlsp.agents.main import get_base_path
 from common.common_functionalities import create_input_file
+from sacoord.sa_coord import CoordProblem, get_config, copy_input_files
 import numpy as np
 import click
-from sacoord.sa_coord import CoordProblem, get_config, copy_input_files
 import random
+import logging
 
 sigma = 0.2
 mu = 0.0
@@ -19,6 +19,7 @@ mu = 0.0
 # _defaults_seed = 1234
 
 DATETIME = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
+logger = logging.getLogger(__name__)
 
 
 @click.command(context_settings=dict(help_option_names=['-h', '--help']))

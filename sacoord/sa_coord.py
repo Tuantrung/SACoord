@@ -173,4 +173,3 @@ def copy_input_files(target_dir, algorithm_config_path, network_path, service_pa
     copyfile(network_path, new_network_path)
     copyfile(service_path, new_service_path)
     copyfile(sim_config_path, new_sim_config_path)
-
