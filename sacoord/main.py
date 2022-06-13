@@ -5,10 +5,13 @@ from datetime import datetime
 from rlsp.agents.main import get_base_path
 from common.common_functionalities import create_input_file
 from sacoord.sa_coord import CoordProblem, get_config, copy_input_files
+from rlsp.envs.environment_limits import EnvironmentLimits
+from sacoord.sa_simulator_wrapper import SASimulatorWrapper
 import numpy as np
 import click
 import random
 import logging
+from pathlib import Path
 
 sigma = 0.2
 mu = 0.0
@@ -19,6 +22,7 @@ mu = 0.0
 # _defaults_seed = 1234
 
 DATETIME = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
+PROJECT_ROOT = str(Path(__file__).parent.parent)
 logger = logging.getLogger(__name__)
 
 
@@ -66,34 +70,50 @@ def cli(algorithm_config, network, service, sim_config, seed):
     base_path = get_base_path(algorithm_config_path, network_path, service_path, sim_config_path)
 
     # set the result dir
-    results_dir = f"../results/{base_path}/{DATETIME}_seed{seed}"
+    results_dir = f"{PROJECT_ROOT}/results/{base_path}/{DATETIME}_seed{seed}"
 
     # create the simulator
-    sim = Simulator(network_path, service_path, sim_config_path, test_mode=True, test_dir=results_dir)
+    sim = Simulator(network_path, service_path, sim_config_path)
 
     # initial action
-    action_processor = ActionScheduleProcessor(num_nodes, num_sfcs, num_sfs)
-    equal_action = np.zeros(num_nodes * num_sfcs * num_sfs * num_nodes)
-    initial_action = action_processor.process_action(equal_action)
+    # action_processor = ActionScheduleProcessor(num_nodes, num_sfcs, num_sfs)
+    # equal_action = np.zeros(num_nodes * num_sfcs * num_sfs * num_nodes)
+    # initial_action = action_processor.process_action(equal_action)
+    initial_action = np.zeros(75)
+    # pop0_schedule = np.array([0, 0.5, 0, 0, 0.5, 0, 0, 0, 1, 0, 0, 0.48, 0.26, 0, 0.26])
+    pop0_schedule = np.array([0, 0.5, 0, 0, 0.5, 0, 0, 0, 1, 0, 0, 0, 0.5, 0, 0.5])
+    for i in range(num_nodes):
+        t = i * (num_nodes * num_sfs)
+        initial_action[t:t + 15] = initial_action[t:t + 15] + pop0_schedule
 
     sacoord_instance = CoordProblem(sim, initial_action, seed, network_path, service_path, flow_weight, delay_weight)
     sacoord_instance.copy_strategy = "slice"
 
-    try:
-        sacoord_instance.steps = algorithm_config['steps']
-    except:
-        logging.info("The steps is not setting, continue with the defaults value")
+    # try:
+    #     sacoord_instance.steps = algorithm_config['steps']
+    # except:
+    #     logging.info("The steps is not setting, continue with the defaults value")
 
-    # sacoord.set_schedule(sacoord.auto(minutes=0.05))
+    schedule = sacoord_instance.auto(minutes=0.05)
+    sacoord_instance.set_schedule(schedule)
 
-    optimistic_action, e = sacoord_instance.anneal()
+    optimistic_action, e, record_best_state = sacoord_instance.anneal()
     assert len(optimistic_action) == len(initial_action)
+
+    # test best state record
+    test_sim = Simulator(network_path, service_path, sim_config_path, test_mode=True, test_dir=results_dir)
+    test_env_limits = EnvironmentLimits(num_nodes, sfc_list, 1)
+    simulator_wrapper = SASimulatorWrapper(test_sim, test_env_limits)
+    simulator_wrapper.init(seed)
+    for i in range(sacoord_instance.steps):
+        simulator_wrapper.apply(record_best_state[0])
 
     # copy input file to the results directory
     copy_input_files(results_dir, algorithm_config_path, network_path, service_path, sim_config_path)
 
     # create information algorithms file
     create_input_file(results_dir, len(ingress_nodes), "SA")
+    print("\n")
 
 
 if __name__ == '__main__':

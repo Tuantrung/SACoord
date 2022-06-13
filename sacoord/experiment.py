@@ -4,18 +4,21 @@ from rlsp.agents.main import get_base_path
 from coordsim.reader.reader import read_network
 
 if __name__ == '__main__':
-    network_path = '../res/networks/5node/5node-in1-rand-cap0-2.graphml'
-    service_path = '../res/service_functions/abc.yaml'
-    sim_config_path = '../res/config/simulator/det-arrival10_det-size001_duration100.yaml'
-    base_path = get_base_path('', network_path, service_path, sim_config_path)
-    config_dir = f'../results/{base_path}'
-    simulator = Simulator(network_path, service_path, sim_config_path)
-    state = simulator.init(seed=1234)
+    network_path = '../res/networks/5node/5node-in2-rand-cap0-2.graphml'
+    # service_path = '../res/service_functions/abc.yaml'
+    # sim_config_path = '../res/config/simulator/det-arrival10_det-size001_duration100.yaml'
+    # base_path = get_base_path('', network_path, service_path, sim_config_path)
+    # config_dir = f'../results/{base_path}'
+    # simulator = Simulator(network_path, service_path, sim_config_path)
+    # state = simulator.init(seed=1234)
     network, ig_node, eg_node = read_network(network_path)
-    for e in network.edges(data=True):
-        print(e)
+
+    # for e in network.edges(data=True):
+    #     print(e)
     for n in network.nodes(data=True):
         print(n)
+
+    print(network.graph['shortest_paths'][('pop3', 'pop4')])
 
 
     # placement = {

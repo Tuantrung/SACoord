@@ -61,7 +61,7 @@ for i in range(9999999):
                 # This worse solution is accepted
                 accept = True
             else:
-                # This worse solution is accepted
+                # This worse solution is not accepted
                 accept = False
         else:
             accept = True

@@ -23,8 +23,6 @@ mu = 0.0
 # service_path = '../res/service_functions/abc.yaml'
 # sim_config_path = '../res/config/simulator/det-arrival10_det-size001_duration100.yaml'
 
-DATETIME = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
-
 
 class CoordProblem(Annealer):
     """
@@ -110,7 +108,8 @@ class CoordProblem(Annealer):
         if cur_succ_flow + cur_drop_flow > 0:
             succ_ratio = cur_succ_flow / (cur_succ_flow + cur_drop_flow)
             # use this for flow reward instead of succ ratio to use full [-1, 1] range rather than just [0,1]
-            flow_reward = (cur_drop_flow - cur_succ_flow) / (cur_succ_flow + cur_drop_flow)
+            # flow_reward = (cur_drop_flow - cur_succ_flow) / (cur_succ_flow + cur_drop_flow)
+            flow_reward = (cur_succ_flow - cur_drop_flow) / (cur_succ_flow + cur_drop_flow)
         return succ_ratio, flow_reward
 
     def get_delay_reward(self, simulator_state, succ_ratio):
@@ -125,7 +124,8 @@ class CoordProblem(Annealer):
         else:
             # subtract from min delay = vnf delay;
             # to disregard VNF delay, which cannot be affected and may already be larger than the diameter
-            delay_reward = (delay - self.min_delay) / self.network_diameter
+            # delay_reward = (delay - self.min_delay) / self.network_diameter
+            delay_reward = ((self.min_delay - delay) / self.network_diameter) + 1
             delay_reward = np.clip(delay_reward, -1, 1)
         return delay, delay_reward
 
