@@ -1,5 +1,4 @@
 --index-url https://pypi.python.org/simple/
---editable git+https://github.com/RealVNF/DeepCoord@tnsm2021#egg=DeepCoord
 --editable git+https://github.com/perrygeo/simanneal#egg=simanneal
 
 PyYAML
@@ -10,3 +9,6 @@ scipy
 networkx
 tqdm
 Click
+
+sacoord
+setuptools

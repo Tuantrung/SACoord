@@ -1,2 +1,1 @@
-res/config/agent/SA/SA_weighted-f1d0.yaml
-res/config/agent/SA/SA_weighted-f05d05.yaml
+/home/core/PycharmProjects/SACoord/res/config/simulator/det-arrival10_det-size001_duration100.yaml

@@ -13,12 +13,12 @@ if __name__ == '__main__':
     # state = simulator.init(seed=1234)
     network, ig_node, eg_node = read_network(network_path)
 
-    # for e in network.edges(data=True):
-    #     print(e)
-    for n in network.nodes(data=True):
-        print(n)
+    for e in network.edges(data=True):
+        print(e)
+    # for n in network.nodes(data=True):
+    #     print(n)
 
-    print(network.graph['shortest_paths'][('pop3', 'pop4')])
+    # print(network.graph['shortest_paths'][('pop4', 'pop3')])
 
 
     # placement = {

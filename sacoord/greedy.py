@@ -1,95 +1,69 @@
-from coordsim.reader.reader import read_network
 import numpy as np
 
-flow_weight = 1
-delay_weight = 0
-network_path = '../res/networks/5node/5node-in2-rand-cap0-2.graphml'
-network, ig_node, eg_node = read_network(network_path)
 
-output = []
-active_node = []
-inactive_node = []
+class GreedyCoord:
 
-for node in network.nodes.items():
-    if node[1]["type"] == "Ingress":
-        node[1]["active"] = 1
-    else:
-        node[1]["active"] = 0
-    node[1]["weight"] = node[1]['active']/len(ig_node)
+    def __init__(self, network, ig_node, num_sfcs, num_sfs, flow_weight=1, delay_weight=0):
+        self.network = network
+        self.ig_node = ig_node
+        self.num_sfcs = num_sfcs
+        self.num_sfs = num_sfs
+        self.flow_weight = flow_weight
+        self.delay_weight = delay_weight
+        self.output = []
+        self.active_node = []
+        self.inactive_node = []
 
-    if node[1]["active"] == 1:
-        active_node.append(node)
-    else:
-        inactive_node.append(node)
+    def greedy_schedule(self):
+        # scheduling at ingress node
+        for node in self.network.nodes.items():
+            if node[1]["type"] == "Ingress":
+                node[1]["active"] = 1
+                self.active_node.append(node)
+            else:
+                node[1]["active"] = 0
+                self.inactive_node.append(node)
+            node[1]["weight"] = node[1]["active"] / len(self.ig_node)
 
-    output.append((node[0], node[1]['weight']))
+        # scheduling in next node
+        # for i in range(self.num_sfs - 1):
+        for i in range(self.num_sfs):
+            self.schedule_next_node()
 
-sum = 0
+        pop0_schedule = np.zeros(shape=len(self.network) * self.num_sfcs * self.num_sfs)
 
-for node in inactive_node:
-    for n in active_node:
-        if network.graph['shortest_paths'][(n[0], node[0])][1] > 3:
-            node[1]['weight'] = 0
-            inactive_node.remove(node)
-        else:
-            node[1]['weight'] = max(((flow_weight + 1) * node[1]['cap'] + (delay_weight + 1) / network.graph['shortest_paths'][(n[0], node[0])][1]), node[1]['weight'])
-        n[1]['weight'] = 0
-    sum += node[1]['weight']
+        for index, v in enumerate(self.output):
+            pop0_schedule[index] += pop0_schedule[index] + v[1]
 
-# reset active node
-active_node.clear()
-inactive_node.clear()
+        return pop0_schedule
 
-for node in network.nodes(data=True):
-    output.append((node[0], round(node[1]['weight'] / sum, 2)))
-    if node[1]['weight'] > 0:
-        node[1]['active'] = 1
-        active_node.append(node)
-    else:
-        node[1]['active'] = 0
-        inactive_node.append(node)
+    def schedule_next_node(self):
+        sum = 0
 
-# reset sum
-sum = 0
+        for node in self.inactive_node:
+            for n in self.active_node:
+                if self.network.graph['shortest_paths'][(n[0], node[0])][1] > len(self.network) or node[1]["cap"] == 0:
+                    node[1]["weight"] = 0
+                    self.inactive_node.remove(node)
+                    break
+                else:
+                    node[1]["weight"] = max(((self.flow_weight + 1) * node[1]['cap'] + (self.delay_weight + 1) /
+                                         self.network.graph['shortest_paths'][(n[0], node[0])][1]), node[1]["weight"])
+                n[1]["weight"] = 0
+            sum += node[1]["weight"]
 
-sum = 0
+        # reset active node
+        self.active_node.clear()
+        self.inactive_node.clear()
 
-for node in inactive_node:
-    for n in active_node:
-        if network.graph['shortest_paths'][(n[0], node[0])][1] > 3:
-            node[1]['weight'] = 0
-            inactive_node.remove(node)
-        else:
-            node[1]['weight'] = max(((flow_weight + 1) * node[1]['cap'] + (delay_weight + 1) / network.graph['shortest_paths'][(n[0], node[0])][1]), node[1]['weight'])
-        n[1]['weight'] = 0
-    sum += node[1]['weight']
-
-# reset active node
-active_node.clear()
-inactive_node.clear()
-
-for node in network.nodes(data=True):
-    output.append((node[0], round(node[1]['weight'] / sum, 2)))
-    if node[1]['weight'] > 0:
-        node[1]['active'] = 1
-        active_node.append(node)
-    else:
-        node[1]['active'] = 0
-        inactive_node.append(node)
-
-pop0_schedule = np.zeros(shape=15)
-
-for index, v in enumerate(output):
-    pop0_schedule[index] += pop0_schedule[index] + v[1]
-
-print(pop0_schedule)
-
-
-
-
-
-
-
-
-
-
+        for node in self.network.nodes(data=True):
+            if sum == 0:
+                print("No solution found")
+                break
+            self.output.append((node[0], round(node[1]["weight"] / sum, 2)))
+            if node[1]["weight"] > 0:
+                node[1]["active"] = 1
+                self.active_node.append(node)
+            else:
+                node[1]["active"] = 0
+                self.inactive_node.append(node)

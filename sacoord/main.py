@@ -12,14 +12,11 @@ import click
 import random
 import logging
 from pathlib import Path
+from sacoord.greedy import GreedyCoord
+from sacoord.shortest_path import get_solution
 
 sigma = 0.2
 mu = 0.0
-# _defaults_algorithm_config_path = '../res/config/agent/SA/SA_weighted-f1d0.yaml'
-# _defaults_network_path = '../res/networks/5node/5node-in2-rand-cap0-2.graphml'
-# _defaults_service_path = '../res/service_functions/abc.yaml'
-# _defaults_sim_config_path = '../res/config/simulator/det-arrival10_det-size001_duration100.yaml'
-# _defaults_seed = 1234
 
 DATETIME = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
 PROJECT_ROOT = str(Path(__file__).parent.parent)
@@ -75,16 +72,22 @@ def cli(algorithm_config, network, service, sim_config, seed):
     # create the simulator
     sim = Simulator(network_path, service_path, sim_config_path)
 
-    # initial action
+    # initial action load balance
     # action_processor = ActionScheduleProcessor(num_nodes, num_sfcs, num_sfs)
     # equal_action = np.zeros(num_nodes * num_sfcs * num_sfs * num_nodes)
     # initial_action = action_processor.process_action(equal_action)
-    initial_action = np.zeros(75)
+
+    # initial_action = np.zeros(num_nodes * num_sfcs * num_sfs * num_nodes)
     # pop0_schedule = np.array([0, 0.5, 0, 0, 0.5, 0, 0, 0, 1, 0, 0, 0.48, 0.26, 0, 0.26])
-    pop0_schedule = np.array([0, 0.5, 0, 0, 0.5, 0, 0, 0, 1, 0, 0, 0, 0.5, 0, 0.5])
-    for i in range(num_nodes):
-        t = i * (num_nodes * num_sfs)
-        initial_action[t:t + 15] = initial_action[t:t + 15] + pop0_schedule
+    # greedy = GreedyCoord(network, ingress_nodes, num_sfcs, num_sfs, flow_weight, delay_weight)
+    # pop0_schedule = np.array([0, 0.5, 0, 0, 0.5, 0, 0, 0, 1, 0, 0, 0, 0.5, 0, 0.5])
+    # pop0_schedule = greedy.greedy_schedule()
+    # for i in range(num_nodes):
+    #     t = i * (num_nodes * num_sfs)
+    #     initial_action[t:t + num_nodes * num_sfs] = initial_action[t:t + num_nodes * num_sfs] + pop0_schedule
+
+    # get initial action from shortest path solution
+    initial_action = get_solution(network, service_path)
 
     sacoord_instance = CoordProblem(sim, initial_action, seed, network_path, service_path, flow_weight, delay_weight)
     sacoord_instance.copy_strategy = "slice"
@@ -94,7 +97,7 @@ def cli(algorithm_config, network, service, sim_config, seed):
     # except:
     #     logging.info("The steps is not setting, continue with the defaults value")
 
-    schedule = sacoord_instance.auto(minutes=0.05)
+    schedule = sacoord_instance.auto(minutes=0.5)
     sacoord_instance.set_schedule(schedule)
 
     optimistic_action, e, record_best_state = sacoord_instance.anneal()
@@ -118,7 +121,7 @@ def cli(algorithm_config, network, service, sim_config, seed):
 
 if __name__ == '__main__':
     _defaults_algorithm_config = '../res/config/agent/SA/SA_weighted-f1d0.yaml'
-    _defaults_network = '../res/networks/5node/5node-in2-rand-cap0-2.graphml'
+    _defaults_network = '../res/networks/abilene/abilene-in1-rand-cap0-2.graphml'
     _defaults_service = '../res/service_functions/abc.yaml'
     _defaults_sim_config = '../res/config/simulator/det-arrival10_det-size001_duration100.yaml'
     _defaults_seed = '1234'
