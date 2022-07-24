@@ -1,1 +1,1 @@
-/home/core/PycharmProjects/SACoord/res/config/simulator/det-arrival10_det-size001_duration100.yaml
+/home/tuan/PycharmProjects/SACoord/res/config/simulator/rand-arrival10_det-size001_duration100.yaml

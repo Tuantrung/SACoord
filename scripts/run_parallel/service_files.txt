@@ -1,1 +1,1 @@
-/home/core/PycharmProjects/SACoord/res/service_functions/abc.yaml
+/home/tuan/PycharmProjects/SACoord/res/service_functions/abc.yaml

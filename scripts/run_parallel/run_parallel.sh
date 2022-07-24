@@ -4,5 +4,5 @@
 # run from project root! (where Readme is)
 
 printf "============================================== Start ==============================================\n"
-parallel sacoord :::: algorithm_config_files.txt :::: network_files.txt :::: service_files.txt :::: sim_config_files.txt
+parallel sacoord :::: algorithm_config_files.txt :::: network_files.txt :::: service_files.txt :::: sim_config_files.txt ::: "--seed" :::: 5seeds.txt
 printf "============================================== Done ===============================================\n"

@@ -3,9 +3,8 @@ import pandas as pd
 import matplotlib.pyplot as plt
 
 # YOU NEED TO CHANGE THIS: copy the result path from above - without the trailing "result.yaml"
-test_result_dir = "/home/core/PycharmProjects/SACoord/results/SA_weighted-f1d0/abilene-in1-rand-cap0-2/" \
-                  "abc/det-arrival10_det-size001_duration100/2022-06-17_12-16-52_seed1234"
-
+test_result_dir = "/home/tuan/PycharmProjects/SACoord/test/results/SA_weighted-f1d0/abilene-in2-rand-cap0-2/" \
+                  "abc/det-arrival10_det-size001_duration100/2022-07-22_17-39-20_seed1233"
 # read test results into pandas data frame
 test_results = os.path.join(test_result_dir, "run_flows.csv")
 df = pd.read_csv(test_results)
