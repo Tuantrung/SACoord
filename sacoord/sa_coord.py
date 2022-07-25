@@ -11,12 +11,13 @@ from spinterface import SimulatorState
 import yaml
 import os
 from shutil import copyfile
+import csv
 
 
 logger = logging.getLogger(__name__)
 
 # seed = 1234
-sigma = 0.2
+sigma = 0.1
 mu = 0.0
 # algorithm_config_path = '../res/config/agent/SA/SA_weighted-f1d0.yaml'
 # network_path = '../res/networks/5node/5node-in2-rand-cap0-2.graphml'
@@ -31,9 +32,9 @@ class CoordProblem(Annealer):
     simulator_state: SimulatorState
 
     # pass extra data into the constructor
-    def __init__(self, simulator, action, seed, network_file, service_file, flow_weight, delay_weight):
+    def __init__(self, simulator, action, seed, network_file, service_file, flow_weight, delay_weight, results_dir):
         self.simulator = simulator
-        self.action = action
+        self.state = action
         self.seed = seed
 
         self.network, _, _ = read_network(network_file)
@@ -58,20 +59,36 @@ class CoordProblem(Annealer):
         self.delay_weight = delay_weight
 
         self.min_delay, self.max_delay = self.min_max_delay()
-        super().__init__(initial_state=self.action)
+
+        self.recorded_best_state = f"{results_dir}/recorded_solution.csv"
+
+        os.makedirs(os.path.dirname(self.recorded_best_state), exist_ok=True)
+
+        # self.solution_stream = open(self.recorded_best_state, 'a+', newline='')
+        #
+        # self.solution_writer = csv.writer(self.solution_stream)
+
+        super(CoordProblem, self).__init__(initial_state=action)
 
     def move(self):
         """Add Gaussian White Noise to action"""
         initial_energy = self.energy()
 
+        # random_process = GaussianWhiteNoiseProcess(sigma=sigma, mu=mu, size=self.tmp - self.num_nodes)
         random_process = GaussianWhiteNoiseProcess(sigma=sigma, mu=mu, size=self.tmp)
+        # random_process = GaussianWhiteNoiseProcess(sigma=sigma, mu=mu, size=self.num_nodes)
         noise = random_process.sample()
 
         for i in range(self.num_nodes):
-            t = i * self.num_nodes
-            self.action[t: t + self.tmp] = self.action[t: t + self.tmp] + noise
-
-        self.curr_simulator_state = self.simulator_wrapper.apply(self.action)
+            t = i * self.tmp
+            # self.action[t + self.num_nodes: t + self.tmp] = self.action[t + self.num_nodes: t + self.tmp] + noise
+            self.state[t: t + self.tmp] = self.state[t: t + self.tmp] + noise
+        # for i in range(self.num_nodes * self.num_sfs):
+        #     t = i * self.num_nodes
+        #     self.action[t: t + self.num_nodes] = self.action[t: t + self.num_nodes] + noise
+        self.state = self.action_processor.process_action(self.state)
+        # self.solution_writer.writerow(self.state)
+        self.curr_simulator_state = self.simulator_wrapper.apply(self.state)
 
         # print(self.curr_simulator_state.placement)
         # print(self.curr_simulator_state.traffic['pop0']['sfc_1'])
@@ -108,8 +125,8 @@ class CoordProblem(Annealer):
         if cur_succ_flow + cur_drop_flow > 0:
             succ_ratio = cur_succ_flow / (cur_succ_flow + cur_drop_flow)
             # use this for flow reward instead of succ ratio to use full [-1, 1] range rather than just [0,1]
-            # flow_reward = (cur_drop_flow - cur_succ_flow) / (cur_succ_flow + cur_drop_flow)
-            flow_reward = (cur_succ_flow - cur_drop_flow) / (cur_succ_flow + cur_drop_flow)
+            flow_reward = (cur_drop_flow - cur_succ_flow) / (cur_succ_flow + cur_drop_flow)
+            # flow_reward = (cur_succ_flow - cur_drop_flow) / (cur_succ_flow + cur_drop_flow)
         return succ_ratio, flow_reward
 
     def get_delay_reward(self, simulator_state, succ_ratio):

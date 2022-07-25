@@ -15,8 +15,8 @@ from pathlib import Path
 from sacoord.greedy import GreedyCoord
 from sacoord.shortest_path import get_solution
 
-sigma = 0.2
-mu = 0.0
+# sigma = 0.2
+# mu = 0.0
 
 DATETIME = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
 PROJECT_ROOT = str(Path(__file__).parent.parent)
@@ -35,10 +35,10 @@ def cli(algorithm_config, network, service, sim_config, seed):
     """sa cli for running"""
     global logger
 
-    algorithm_config_path = algorithm_config
-    network_path = network
-    service_path = service
-    sim_config_path = sim_config
+    algorithm_config_path = f'{PROJECT_ROOT}/{algorithm_config}'
+    network_path = f'{PROJECT_ROOT}/{network}'
+    service_path = f'{PROJECT_ROOT}/{service}'
+    sim_config_path = f'{PROJECT_ROOT}/{sim_config}'
     seed = seed
 
     # get the number of nodes and list of ingress nodes
@@ -89,7 +89,7 @@ def cli(algorithm_config, network, service, sim_config, seed):
     # get initial action from shortest path solution
     initial_action = get_solution(network, service_path)
 
-    sacoord_instance = CoordProblem(sim, initial_action, seed, network_path, service_path, flow_weight, delay_weight)
+    sacoord_instance = CoordProblem(sim, initial_action, seed, network_path, service_path, flow_weight, delay_weight, results_dir)
     sacoord_instance.copy_strategy = "slice"
 
     # try:
@@ -100,16 +100,13 @@ def cli(algorithm_config, network, service, sim_config, seed):
     schedule = sacoord_instance.auto(minutes=0.5)
     sacoord_instance.set_schedule(schedule)
 
-    optimistic_action, e, record_best_state = sacoord_instance.anneal()
-    assert len(optimistic_action) == len(initial_action)
-
     # test best state record
     test_sim = Simulator(network_path, service_path, sim_config_path, test_mode=True, test_dir=results_dir)
     test_env_limits = EnvironmentLimits(num_nodes, sfc_list, 1)
     simulator_wrapper = SASimulatorWrapper(test_sim, test_env_limits)
     simulator_wrapper.init(seed)
     for i in range(sacoord_instance.steps):
-        simulator_wrapper.apply(record_best_state[0])
+        simulator_wrapper.apply(recorded_best_state[i])
 
     # copy input file to the results directory
     copy_input_files(results_dir, algorithm_config_path, network_path, service_path, sim_config_path)
@@ -120,9 +117,10 @@ def cli(algorithm_config, network, service, sim_config, seed):
 
 
 if __name__ == '__main__':
-    _defaults_algorithm_config = '../res/config/agent/SA/SA_weighted-f1d0.yaml'
-    _defaults_network = '../res/networks/abilene/abilene-in1-rand-cap0-2.graphml'
-    _defaults_service = '../res/service_functions/abc.yaml'
-    _defaults_sim_config = '../res/config/simulator/det-arrival10_det-size001_duration100.yaml'
+    _defaults_algorithm_config = 'res/config/agent/SA/SA_weighted-f1d0.yaml'
+    _defaults_network = 'res/networks/abilene/abilene-in1-rand-cap0-2.graphml'
+    _defaults_service = 'res/service_functions/abc.yaml'
+    _defaults_sim_config = 'res/config/simulator/' \
+                           'rand-arrival10_det-size001_duration100_trace_0_100_inall_chrate2_scale00005.yaml'
     _defaults_seed = '1234'
     cli([_defaults_algorithm_config, _defaults_network, _defaults_service, _defaults_sim_config, '--seed', _defaults_seed])

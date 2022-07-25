@@ -181,5 +181,6 @@ cython_debug/
 .idea/
 
 results/
+results_v1/
 
 *.egg-info/

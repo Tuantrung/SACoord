@@ -6,6 +6,7 @@ from matplotlib import pyplot
 from numpy.random import seed
 # source https://machinelearningmastery.com/simulated-annealing-from-scratch-in-python/
 
+
 # objective function
 def objective(x):
     return x[0]**2.0

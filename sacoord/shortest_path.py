@@ -1,5 +1,5 @@
 from algorithms.shortestPath import get_placement_schedule
-from coordsim.reader.reader import read_network, get_sfc
+from coordsim.reader.reader import get_sfc
 from common.common_functionalities import get_ingress_nodes_and_cap
 import numpy as np
 
